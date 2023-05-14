@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Gaussian PDF and CDF Visualization</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.3.0/plotly.min.js"></script>
+  <style>
+    .box {
+      display: inline-block;
+      vertical-align: top;
+      margin-right: 20px;
+    }
+    #pdfChart,
+    #cdfChart {
+      width: 600px;
+      height: 400px;
+      margin-bottom: 20px;
+    }
+    #controls {
+      width: 400px;
+      margin-bottom: 20px;
+    }
+    #meanLabel,
+    #stdDevLabel {
+      display: inline-block;
+      width: 50px;
+    }
+    #meanSlider,
+    #stdDevSlider {
+      display: inline-block;
+      width: 250px;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+  <h1>Gaussian PDF and CDF Visualization</h1>
+
+  <div class="box">
+    <h2>Visualization</h2>
+    <div id="pdfChart"></div>
+    <div id="cdfChart"></div>
+  </div>
+
+  <div class="box">
+    <h2>Control Bars</h2>
+    <div id="controls">
+      <label for="meanSlider">Mean:</label>
+      <label id="meanLabel" for="meanSliderValue"></label>
+      <input type="range" id="meanSlider" min="-10" max="10" step="0.1" value="0">
+
+      <br>
+
+      <label for="stdDevSlider">Standard Deviation:</label>
+      <label id="stdDevLabel" for="stdDevSliderValue"></label>
+      <input type="range" id="stdDevSlider" min="0.1" max="5" step="0.1" value="1">
+    </div>
+  </div>
+
+  <script>
+    function updateCharts() {
+      const mean = parseFloat($('#meanSlider').val());
+      const stdDev = parseFloat($('#stdDevSlider').val());
+
+      // Calculate data for PDF
+      const pdfX = [];
+      const pdfY = [];
+      for (let x = -10; x <= 10; x += 0.1) {
+        pdfX.push(x);
+        pdfY.push((1 / (stdDev * Math.sqrt(2 * Math.PI))) * Math.exp(-((x - mean) ** 2) / (2 * stdDev ** 2)));
+      }
+
+      // Calculate data for CDF
+      const cdfX = [];
+      const cdfY = [];
+      for (let x = -10; x <= 10; x += 0.1) {
+        cdfX.push(x);
+        cdfY.push(0.5 * (1 + erf((x - mean) / (stdDev * Math.sqrt(2)))));
+      }
+
+      // Update PDF chart
+      Plotly.newPlot('pdfChart', [{
+        x: pdfX,
+        y: pdfY,
+        type: 'line',
+        mode: 'lines',
+        line: { color: 'blue' }
+      }], {
+        title: 'Gaussian PDF',
+        xaxis: { title: 'X' },
+        yaxis: { title: 'Probability Density' }
+      });
+
+      // Update CDF chart
+      Plotly.newPlot('cdfChart', [{
+    x: cdfX,
+    y: cdfY,
+    type: 'line',
+    mode: 'lines',
+    line: { color: 'red' }
+}], {
+    title: 'Gaussian CDF',
+    xaxis: { title: 'X' },
+    yaxis: { title: 'Cumulative Probability' }
+});
+}
+
+// Helper function for calculating the error function (erf)
+function erf(x) {
+    const a1 =  0.254829592;
+    const a2 = -0.284496736;
+    const a3 =  1.421413741;
+    const a4 = -1.453152027;
+    const a5 =  1.061405429;
+    const p  =  0.3275911;
+
+    const sign = (x >= 0) ? 1 : -1;
+    const absX = Math.abs(x);
+
+    const t = 1.0 / (1.0 + p * absX);
+    const y = ((((a5 * t + a4) * t) + a3) * t + a2) * t + a1;
+    return sign * (1 - y * Math.exp(-absX * absX));
+}
+
+// Update labels and charts when sliders are changed
+$('#meanSlider, #stdDevSlider').on('input', function() {
+    const mean = parseFloat($('#meanSlider').val());
+    const stdDev = parseFloat($('#stdDevSlider').val());
+
+    $('#meanLabel').text(mean.toFixed(1));
+    $('#stdDevLabel').text(stdDev.toFixed(1));
+
+    updateCharts();
+});
+
+// Initial chart update
+updateCharts();
+</script>
+</body>
+</html>
+

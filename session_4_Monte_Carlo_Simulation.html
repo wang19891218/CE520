@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Monte Carlo Simulation for Pi Estimation</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.3.0/plotly.min.js"></script>
+  <style>
+    #simulationChart {
+      width: 600px;
+      height: 400px;
+      margin-bottom: 20px;
+    }
+    #controls {
+      width: 300px;
+      margin-bottom: 20px;
+    }
+    #numPointsLabel {
+      display: inline-block;
+      width: 100px;
+    }
+    #numPointsSlider {
+      display: inline-block;
+      width: 150px;
+      vertical-align: middle;
+    }
+    #estimateResult {
+      font-size: 24px;
+      font-weight: bold;
+    }
+    #historyChart {
+      width: 600px;
+      height: 400px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Monte Carlo Simulation for Pi Estimation</h1>
+
+  <div id="simulationChart"></div>
+
+  <div id="controls">
+    <label for="numPointsSlider">Number of Points:</label>
+    <label id="numPointsLabel" for="numPointsSliderValue"></label>
+    <input type="range" id="numPointsSlider" min="100" max="10000" step="100" value="1000">
+  </div>
+
+  <h2>Estimate of Pi:</h2>
+  <p id="estimateResult"></p>
+
+  <h2>History:</h2>
+  <div id="historyChart"></div>
+
+  <script>
+    const historyData = [];
+
+    function updateSimulation() {
+      const numPoints = parseInt($('#numPointsSlider').val());
+
+      let pointsInsideCircle = 0;
+      let pointsOutsideCircle = 0;
+
+      for (let i = 0; i < numPoints; i++) {
+        const x = Math.random();
+        const y = Math.random();
+
+        const distance = Math.sqrt(x ** 2 + y ** 2);
+
+        if (distance <= 1) {
+          pointsInsideCircle++;
+        } else {
+          pointsOutsideCircle++;
+        }
+      }
+
+      const piEstimate = 4 * (pointsInsideCircle / (pointsInsideCircle + pointsOutsideCircle));
+      const historyItem = { numPoints, piEstimate };
+
+      historyData.push(historyItem);
+
+      $('#estimateResult').text(piEstimate.toFixed(5));
+
+      const simulationData = [
+        {
+          x: [],
+          y: [],
+          mode: 'markers',
+          type: 'scatter',
+          marker: {
+            color: 'blue',
+            size: 5
+          }
+        }
+      ];
+
+      for (let i = 0; i < pointsInsideCircle; i++) {
+        const x = Math.random();
+        const y = Math.random();
+
+        const distance = Math.sqrt(x ** 2 + y ** 2);
+
+        if (distance <= 1) {
+          simulationData[0].x.push(x);
+          simulationData[0].y.push(y);
+        }
+      }
+
+      for (let i = 0; i < pointsOutsideCircle; i++) {
+        const x = Math.random();
+        const y = Math.random();
+
+        const distance = Math.sqrt(x ** 2 + y **2);
+
+        if (distance > 1) {
+          simulationData[0].x.push(x);
+          simulationData[0].y.push(y);
+        }
+      }
+
+      Plotly.newPlot('simulationChart', simulationData, {
+        title: 'Monte Carlo Simulation',
+        xaxis: { title: 'X' },
+        yaxis: { title: 'Y' },
+      });
+
+      updateHistory();
+    }
+
+    function updateHistory() {
+      const historyElement = $('#historyChart');
+
+      const historyX = historyData.map((item) => item.numPoints);
+      const historyY = historyData.map((item) => item.piEstimate);
+
+      const historyTrace = {
+        x: historyX,
+        y: historyY,
+        mode: 'lines',
+        type: 'scatter',
+        line: {
+          color: 'red'
+        }
+      };
+
+      const layout = {
+        title: 'History of Pi Estimate',
+        xaxis: { title: 'Number of Points' },
+        yaxis: { title: 'Pi Estimate' },
+      };
+
+      const historyPlotData = [historyTrace];
+
+      Plotly.newPlot('historyChart', historyPlotData, layout);
+    }
+
+    // Update labels and charts when slider is changed
+    $('#numPointsSlider').on('input', function() {
+      const numPoints = parseInt($('#numPointsSlider').val());
+
+      $('#numPointsLabel').text(numPoints);
+
+      updateSimulation();
+    });
+
+    // Initial simulation update
+    updateSimulation();
+  </script>
+</body>
+</html>
+
